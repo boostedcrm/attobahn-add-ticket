@@ -1,8 +1,12 @@
 import React from "react";
 import "./App.css";
-import { Button, Stack, MenuItem, TextField } from "@mui/material"; // Correct import here
+import { Button, Stack, MenuItem, TextField, Box } from "@mui/material"; // Correct import here
 import { useForm, Controller } from "react-hook-form";
 import AutoComplete from "./AutoComplete";
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 function App() {
   const { handleSubmit, control, formState } = useForm();
@@ -85,7 +89,6 @@ function App() {
               <TextField label="Subject" type="text" {...field} />
             )}
           />
-
           <Controller
             name="inputText"
             control={control}
@@ -96,7 +99,7 @@ function App() {
                 type="text"
                 label="Input text"
                 multiline
-                rows={6}
+                rows={3}
                 {...field}
               />
             )}
@@ -115,27 +118,19 @@ function App() {
               </TextField>
             )}
           />
-
-          <Controller
-            name="dueDate"
-            control={control}
-            defaultValue=""
-            rules={{ required: true }}
-            render={({ field }) => (
-              <TextField
-                label="Due Date"
-                type="date"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                {...field}
-              />
-            )}
-          />
-
+             <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <DemoContainer components={['DateTimePicker']}>
+        <DateTimePicker label="Basic date time picker" />
+      </DemoContainer>
+    </LocalizationProvider>
+          <Box sx={{display: "flex", justifyContent: "flex-end", gap: 2}}>
+          <Button variant="outlined">
+            Cancel
+          </Button>
           <Button type="submit" variant="contained" disabled={!isValid}>
             Save
           </Button>
+          </Box>
         </Stack>
       </form>
     </div>
