@@ -2,23 +2,33 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import {
   Button,
-  Stack,
   MenuItem,
   TextField,
   Box,
   Typography,
+  Grid,
+  CircularProgress,
 } from "@mui/material"; // Correct import here
 import { useForm, Controller } from "react-hook-form";
 import Autocomplete from "@mui/material/Autocomplete";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { DatePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
 
 const ZOHO = window.ZOHO;
 
 function App() {
-  const { handleSubmit, control, formState } = useForm();
+  const { handleSubmit, control, formState } = useForm({
+    defaultValues: {
+      subject: "",
+      description: "",
+      classification: null,
+      priority: null,
+      due_date: null,
+    },
+  });
+  const [createLoading, setCreateLoading] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [entityId, setEntityId] = useState();
   const [agents, setAgents] = useState([]);
@@ -39,6 +49,9 @@ function App() {
      */
     ZOHO.embeddedApp.init().then(() => {
       setZohoLoaded(true);
+      ZOHO.CRM.UI.Resize({ height: "750", width: "700" }).then(function (data) {
+        // console.log(data);
+      });
     });
   }, []);
 
@@ -62,9 +75,10 @@ function App() {
   }, [zohoLoaded]);
 
   const onSubmit = async (data) => {
-    console.log(selectedDepartment);
-    console.log(selectedAgent);
+    // console.log(selectedDepartment);
+    // console.log(selectedAgent);
     console.log(data);
+    setCreateLoading(true);
     let func_name = "Zoho_desk_ticket_handle_from_milestones";
     // {
     //   "cf": {
@@ -87,25 +101,31 @@ function App() {
       selectedAgent: selectedAgent?.id,
       cf_milestone_id: entityId,
       subject: data?.subject,
-      description: data?.inputText,
+      description: data?.description,
       classification: data?.classification,
       priority: data?.priority,
+      due_date: data?.due_date,
       contactId: "592678000019613037",
     };
     await ZOHO.CRM.FUNCTIONS.execute(func_name, req_data).then(async function (
       result
     ) {
       console.log(result);
-      let resp = JSON.parse(result?.details?.output);
+      let resp = JSON.parse(
+        result?.details?.output ? result?.details?.output : "{}"
+      );
       if (resp?.id) {
-        alert("Created Successfully");
+        // setCreateLoading(false);
+        // alert("Created Successfully");
+        ZOHO.CRM.UI.Popup.closeReload().then(function (data) {
+          console.log(data);
+        });
+      } else {
+        setCreateLoading(false);
+        alert("Something went wrong...!");
       }
     });
     // Log form data to the console
-  };
-
-  const handleClose = async () => {
-    ZOHO.CRM.UI.Popup.close().then(function (data) {});
   };
 
   const [selectedAgent, setSelectedAgent] = useState(null);
@@ -114,25 +134,27 @@ function App() {
   const filteredAgents = selectedDepartment
     ? agents[selectedDepartment.id] || []
     : [];
-  console.log({ selectedDepartment });
+  // console.log({ selectedDepartment });
   return (
-    <div className="App">
-      <h1>Create a Ticket</h1>
-      <Box
+    <Box sx={{ m: 4 }}>
+      <Typography sx={{ fontSize: 20, textAlign: "center", mb: 3 }}>
+        Create a Ticket
+      </Typography>
+      {/* <Box
         sx={{ display: "flex", gap: 5, justifyContent: "space-around", mb: 2 }}
       >
         <Typography>Created By: name of the user</Typography>
         <Typography>Date/Time: Not editable</Typography>
-      </Box>
-
+      </Box> */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack spacing={2} width={500}>
-          <Box sx={{ display: "flex", gap: 1 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
             <Autocomplete
               id="department-autocomplete"
               options={departments}
+              size="small"
               getOptionLabel={(option) => option.nameInCustomerPortal}
-              sx={{ width: "50%" }}
+              fullWidth
               value={selectedDepartment}
               onChange={(event, newValue) => {
                 setSelectedDepartment(newValue);
@@ -143,14 +165,18 @@ function App() {
                   {...params}
                   label="Select Department"
                   variant="outlined"
+                  InputLabelProps={{ shrink: true }}
                 />
               )}
             />
-
+          </Grid>
+          <Grid item xs={6}>
+            {" "}
             <Autocomplete
               id="agent-autocomplete"
+              size="small"
               options={filteredAgents}
-              sx={{ width: "50%" }}
+              fullWidth
               getOptionLabel={(option) =>
                 `${option.firstName} ${option.lastName}`
               }
@@ -164,24 +190,25 @@ function App() {
                   label="Select Agent"
                   variant="outlined"
                   disabled={!selectedDepartment}
+                  InputLabelProps={{ shrink: true }}
                 />
               )}
             />
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 1 }}>
+          </Grid>
+          <Grid item xs={6}>
             <Controller
               name="classification"
               control={control}
               defaultValue=""
               rules={{ required: true }}
-              sx={{ width: "50%" }}
               render={({ field }) => (
                 <TextField
+                  fullWidth
+                  size="small"
                   select
                   label="Classification"
+                  InputLabelProps={{ shrink: true }}
                   {...field}
-                  sx={{ width: "50%" }}
                 >
                   <MenuItem value="Problem/Issue">Problem/Issue</MenuItem>
                   <MenuItem value="Question">Question</MenuItem>
@@ -190,18 +217,23 @@ function App() {
                 </TextField>
               )}
             />
+          </Grid>
+          <Grid item xs={6}>
             <Controller
               name="priority"
               control={control}
+              fullWidth
               defaultValue=""
               rules={{ required: true }}
               render={({ field }) => (
                 <TextField
+                  fullWidth
+                  size="small"
                   select
                   label="Priority"
+                  InputLabelProps={{ shrink: true }}
                   {...field}
-                  align="center"
-                  sx={{ width: "50%" }}
+                  // align="center"
                 >
                   <MenuItem value="Medium">Medium</MenuItem>
                   <MenuItem value="High">High</MenuItem>
@@ -209,48 +241,113 @@ function App() {
                 </TextField>
               )}
             />
-          </Box>
-          <Controller
-            name="subject"
-            control={control}
-            defaultValue=""
-            rules={{ required: true }}
-            render={({ field }) => (
-              <TextField label="Subject" type="text" {...field} />
-            )}
-          />
-          <Controller
-            name="inputText"
-            control={control}
-            defaultValue=""
-            rules={{ required: true }}
-            render={({ field }) => (
-              <TextField
-                type="text"
-                label="Input text"
-                multiline
-                rows={3}
-                {...field}
-              />
-            )}
-          />
+          </Grid>
+          <Grid item xs={12}>
+            <Controller
+              name="subject"
+              control={control}
+              defaultValue=""
+              rules={{ required: true }}
+              render={({ field }) => (
+                <TextField
+                  fullWidth
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                  label="Subject"
+                  type="text"
+                  {...field}
+                />
+              )}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            {" "}
+            <Controller
+              name="description"
+              control={control}
+              defaultValue=""
+              rules={{ required: true }}
+              render={({ field }) => (
+                <TextField
+                  type="text"
+                  label="Description"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  multiline
+                  minRows={3}
+                  {...field}
+                />
+              )}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <Controller
+              name="due_date"
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => {
+                return (
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      disablePast
+                      label="Due Date"
+                      {...field}
+                      inputProps={{
+                        style: {
+                          height: 18,
+                        },
+                      }}
+                      onChange={(newValue) => {
+                        field.onChange(dayjs(newValue).format("YYYY-MM-DD"));
+                      }}
+                      PopperProps={{
+                        placement: "right-end",
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          required
+                          fullWidth
+                          size="small"
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      )}
+                    />
+                  </LocalizationProvider>
+                );
+              }}
+            />
+          </Grid>
+        </Grid>
 
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DemoContainer components={["DateTimePicker"]}>
-              <DateTimePicker label="Basic date time picker" />
-            </DemoContainer>
-          </LocalizationProvider>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-            <Button variant="outlined" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" disabled={!isValid}>
-              Save
-            </Button>
-          </Box>
-        </Stack>
+        {/* <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DemoContainer components={["DateTimePicker"]}>
+            <DateTimePicker label="Basic date time picker" />
+          </DemoContainer>
+        </LocalizationProvider> */}
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+          <Button
+            variant="outlined"
+            sx={{ width: 130, mr: 2 }}
+            onClick={() =>
+              ZOHO.CRM.UI.Popup.close().then(function (data) {
+                console.log(data);
+              })
+            }
+          >
+            Cancel
+          </Button>
+          <Button
+            sx={{ width: 130 }}
+            type="submit"
+            variant="contained"
+            disabled={!isValid || createLoading}
+          >
+            {createLoading ? <CircularProgress size={20} /> : "Create"}
+          </Button>
+        </Box>
       </form>
-    </div>
+    </Box>
   );
 }
 
