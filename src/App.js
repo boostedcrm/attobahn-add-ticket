@@ -8,6 +8,8 @@ import {
   Typography,
   Grid,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material"; // Correct import here
 import { useForm, Controller } from "react-hook-form";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -25,7 +27,7 @@ function App() {
       description: "",
       classification: null,
       priority: null,
-      due_date: null,
+      // due_date: null,
     },
   });
   const [createLoading, setCreateLoading] = useState(false);
@@ -36,6 +38,16 @@ function App() {
   const { isValid } = formState;
 
   const [zohoLoaded, setZohoLoaded] = useState(false);
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
 
   useEffect(() => {
     ZOHO.embeddedApp.on("PageLoad", function (data) {
@@ -49,7 +61,7 @@ function App() {
      */
     ZOHO.embeddedApp.init().then(() => {
       setZohoLoaded(true);
-      ZOHO.CRM.UI.Resize({ height: "750", width: "700" }).then(function (data) {
+      ZOHO.CRM.UI.Resize({ height: "550", width: "700" }).then(function (data) {
         // console.log(data);
       });
     });
@@ -73,6 +85,12 @@ function App() {
     }
     getData();
   }, [zohoLoaded]);
+
+  const handleCloseWidget = async () => {
+    await ZOHO.CRM.UI.Popup.closeReload().then(function (data) {
+      console.log(data);
+    });
+  };
 
   const onSubmit = async (data) => {
     // console.log(selectedDepartment);
@@ -104,7 +122,7 @@ function App() {
       description: data?.description,
       classification: data?.classification,
       priority: data?.priority,
-      due_date: data?.due_date,
+      // due_date: data?.due_date,
       contactId: "592678000019613037",
     };
     await ZOHO.CRM.FUNCTIONS.execute(func_name, req_data).then(async function (
@@ -115,14 +133,18 @@ function App() {
         result?.details?.output ? result?.details?.output : "{}"
       );
       if (resp?.id) {
-        // setCreateLoading(false);
-        // alert("Created Successfully");
-        ZOHO.CRM.UI.Popup.closeReload().then(function (data) {
-          console.log(data);
-        });
+        setTimeout(() => {
+          handleCloseWidget();
+        }, 5000);
       } else {
+        if (resp?.error) {
+          setSnackbarMessage(resp?.error);
+          setOpenSnackbar(true);
+        } else {
+          setSnackbarMessage("Something went wrong please try again later...");
+          setOpenSnackbar(true);
+        }
         setCreateLoading(false);
-        alert("Something went wrong...!");
       }
     });
     // Log form data to the console
@@ -274,13 +296,13 @@ function App() {
                   fullWidth
                   InputLabelProps={{ shrink: true }}
                   multiline
-                  minRows={3}
+                  rows={7}
                   {...field}
                 />
               )}
             />
           </Grid>
-          <Grid item xs={6}>
+          {/* <Grid item xs={6}>
             <Controller
               name="due_date"
               control={control}
@@ -317,7 +339,7 @@ function App() {
                 );
               }}
             />
-          </Grid>
+          </Grid> */}
         </Grid>
 
         {/* <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -347,6 +369,19 @@ function App() {
           </Button>
         </Box>
       </form>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
