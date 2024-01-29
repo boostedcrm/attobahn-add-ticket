@@ -350,6 +350,7 @@ function App() {
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
           <Button
             variant="outlined"
+            size="small"
             sx={{ width: 130, mr: 2 }}
             onClick={() =>
               ZOHO.CRM.UI.Popup.close().then(function (data) {
@@ -362,6 +363,7 @@ function App() {
           <Button
             sx={{ width: 130 }}
             type="submit"
+            size="small"
             variant="contained"
             disabled={!isValid || createLoading}
           >
