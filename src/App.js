@@ -209,7 +209,7 @@ function App() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Select Agent"
+                  label="Ticket Owner"
                   variant="outlined"
                   disabled={!selectedDepartment}
                   InputLabelProps={{ shrink: true }}
