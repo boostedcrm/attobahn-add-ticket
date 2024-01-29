@@ -257,9 +257,9 @@ function App() {
                   {...field}
                   // align="center"
                 >
+                  <MenuItem value="Low">Low</MenuItem>
                   <MenuItem value="Medium">Medium</MenuItem>
                   <MenuItem value="High">High</MenuItem>
-                  <MenuItem value="Low">Low</MenuItem>
                 </TextField>
               )}
             />
