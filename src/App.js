@@ -13,6 +13,7 @@ import {
 } from "@mui/material"; // Correct import here
 import { useForm, Controller } from "react-hook-form";
 import Autocomplete from "@mui/material/Autocomplete";
+import dayjs from "dayjs";
 // import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 // import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 // import { DatePicker } from "@mui/x-date-pickers";
@@ -21,7 +22,9 @@ import Autocomplete from "@mui/material/Autocomplete";
 const ZOHO = window.ZOHO;
 
 function App() {
-  const { handleSubmit, control, formState } = useForm({
+  let dateMap = { Low: 4, Medium: 1, High: 0 };
+
+  const { handleSubmit, control, watch, formState } = useForm({
     defaultValues: {
       subject: "",
       description: "",
@@ -30,6 +33,9 @@ function App() {
       // due_date: null,
     },
   });
+
+  const watchAllFields = watch();
+
   const [initialLoading, setInitialLoading] = useState(true);
   const [createLoading, setCreateLoading] = useState(false);
   const [departments, setDepartments] = useState([]);
@@ -173,11 +179,11 @@ function App() {
       // due_date: data?.due_date,
       // contactId: "592678000019613037",
     };
-    console.log({ req_data });
+    // console.log({ req_data });
     await ZOHO.CRM.FUNCTIONS.execute(func_name, req_data).then(async function (
       result
     ) {
-      console.log(result);
+      // console.log(result);
       let resp = JSON.parse(
         result?.details?.output ? result?.details?.output : "{}"
       );
@@ -213,6 +219,8 @@ function App() {
         if (findAgent) {
           setSelectedAgent(findAgent);
         }
+      } else {
+        setSelectedContact(null);
       }
     }
   }, [selectedDepartment]);
@@ -285,6 +293,7 @@ function App() {
                 <Autocomplete
                   id="agent-autocomplete"
                   size="small"
+                  disabled={!selectedDepartment?.id}
                   options={filteredAgents}
                   fullWidth
                   getOptionLabel={(option) =>
@@ -429,6 +438,19 @@ function App() {
             />
           </Grid> */}
             </Grid>
+            <Typography sx={{ mt: 1 }}>
+              Due Date :{" "}
+              {watchAllFields?.priority
+                ? dayjs()
+                    .add(
+                      dateMap[watchAllFields?.priority]
+                        ? dateMap[watchAllFields?.priority]
+                        : 0,
+                      "day"
+                    )
+                    .format("MM-DD-YYYY")
+                : ""}
+            </Typography>
 
             {/* <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DemoContainer components={["DateTimePicker"]}>
