@@ -272,7 +272,7 @@ function App() {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Customer/Vendor Contact Name"
+                        label="Vendor Ticket Contact"
                         variant="outlined"
                         InputLabelProps={{ shrink: true }}
                       />
