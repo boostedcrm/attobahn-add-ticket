@@ -141,26 +141,8 @@ function App() {
   };
 
   const onSubmit = async (data) => {
-    // console.log(selectedDepartment);
-    // console.log(selectedAgent);
-    console.log(data);
     setCreateLoading(true);
     let func_name = "Zoho_desk_ticket_handle_from_milestones";
-    // {
-    //   "cf": {
-    //     "cf_milestone_id": "5035598000002136182"
-    //   },
-    //   "departmentId": "592678000020442029",
-    //   "contactId": "592678000019613037",
-    //   "subject": "Test Create by api 3",
-    //   "dueDate": "2023-11-12T23:16:16.000Z",
-    //   "description": "Hai This is Description for testing",
-    //   "priority": "Medium",
-    //   "classification": "Question",
-    //   "phone": "233443",
-    //   "email": "Ed+Test@attobahn.com",
-    //   "status": "Open"
-    // };
     let req_data = {
       create_tickets: true,
       department: selectedDepartment?.id,
@@ -188,9 +170,15 @@ function App() {
         result?.details?.output ? result?.details?.output : "{}"
       );
       if (resp?.id) {
-        setTimeout(() => {
-          handleCloseWidget();
-        }, 5000);
+        await ZOHO.CRM.API.addNotes({
+          Entity: "Milestones",
+          RecordID: entityId,
+          Content: `Ticket Number: ${resp?.ticketNumber} created`,
+        });
+        handleCloseWidget();
+        // setTimeout(() => {
+        //   handleCloseWidget();
+        // }, 5000);
       } else {
         if (resp?.error) {
           setSnackbarMessage(resp?.error);
