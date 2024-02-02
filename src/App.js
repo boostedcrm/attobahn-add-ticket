@@ -107,7 +107,7 @@ function App() {
      */
     ZOHO.embeddedApp.init().then(() => {
       setZohoLoaded(true);
-      ZOHO.CRM.UI.Resize({ height: "630", width: "700" }).then(function (data) {
+      ZOHO.CRM.UI.Resize({ height: "600", width: "700" }).then(function (data) {
         // console.log(data);
       });
     });
@@ -146,7 +146,7 @@ function App() {
     let req_data = {
       create_tickets: true,
       department: selectedDepartment?.id,
-      selectedAgent: selectedAgent?.id,
+      selectedAgent: selectedAgent?.id ? selectedAgent?.id : null,
       cf_milestone_id: entityId,
       subject: data?.subject,
       description: data?.description,
@@ -230,7 +230,7 @@ function App() {
         <Typography>Date/Time: Not editable</Typography>
       </Box> */}
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               <Grid item xs={6}>
                 <Autocomplete
                   id="department-autocomplete"
