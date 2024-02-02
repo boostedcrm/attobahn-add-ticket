@@ -107,7 +107,7 @@ function App() {
      */
     ZOHO.embeddedApp.init().then(() => {
       setZohoLoaded(true);
-      ZOHO.CRM.UI.Resize({ height: "570", width: "700" }).then(function (data) {
+      ZOHO.CRM.UI.Resize({ height: "630", width: "700" }).then(function (data) {
         // console.log(data);
       });
     });
