@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
 import "./App.css";
 import {
   Button,
@@ -19,12 +22,36 @@ import dayjs from "dayjs";
 // import { DatePicker } from "@mui/x-date-pickers";
 // import dayjs from "dayjs";
 
+const modules = {
+  toolbar: [
+    [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ size: [] }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ color: ["red", "black", "#ffff00", "#15ff00", "#004cff"] }],
+    [{ background: ["red", "black", "#ffff00", "#15ff00", "#004cff"] }],
+  ],
+};
+
+const formats = [
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "list",
+  "bullet",
+  "color",
+  "background",
+  "align",
+];
+
 const ZOHO = window.ZOHO;
 
 function App() {
   let dateMap = { Low: 4, Medium: 1, High: 0 };
 
-  const { handleSubmit, control, watch, formState } = useForm({
+  const { handleSubmit, control, watch, setValue, formState } = useForm({
     defaultValues: {
       subject: "",
       description: "",
@@ -368,8 +395,17 @@ function App() {
                 />
               </Grid>
               <Grid item xs={12}>
-                {" "}
-                <Controller
+                <Box sx={{ minHeight: 200 }}>
+                  <ReactQuill
+                    theme="snow"
+                    modules={modules}
+                    formats={formats}
+                    value={watchAllFields?.description}
+                    onChange={(e) => setValue("description", e)}
+                    // onChange={(e) => console.log("description", e)}
+                  />
+                </Box>{" "}
+                {/* <Controller
                   name="description"
                   control={control}
                   defaultValue=""
@@ -385,7 +421,7 @@ function App() {
                       {...field}
                     />
                   )}
-                />
+                /> */}
               </Grid>
               {/* <Grid item xs={6}>
             <Controller
