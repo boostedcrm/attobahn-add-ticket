@@ -250,12 +250,6 @@ function App() {
           <Typography sx={{ fontSize: 20, textAlign: "center", mb: 3 }}>
             Create a Ticket
           </Typography>
-          {/* <Box
-        sx={{ display: "flex", gap: 5, justifyContent: "space-around", mb: 2 }}
-      >
-        <Typography>Created By: name of the user</Typography>
-        <Typography>Date/Time: Not editable</Typography>
-      </Box> */}
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <Grid container spacing={1}>
               <Grid item xs={6}>
@@ -280,29 +274,6 @@ function App() {
                   )}
                 />
               </Grid>
-              {selectedDepartment?.id === "592678000020442029" && (
-                <Grid item xs={6}>
-                  <Autocomplete
-                    id="contact-autocomplete"
-                    options={contacts}
-                    size="small"
-                    getOptionLabel={(option) => option?.Full_Name}
-                    fullWidth
-                    value={selectedContact}
-                    onChange={(event, newValue) => {
-                      setSelectedContact(newValue);
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Vendor Ticket Contact"
-                        variant="outlined"
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    )}
-                  />
-                </Grid>
-              )}
               <Grid item xs={6}>
                 {" "}
                 <Autocomplete
@@ -329,6 +300,30 @@ function App() {
                   )}
                 />
               </Grid>
+              {selectedDepartment?.id === "592678000020442029" && (
+                <Grid item xs={6}>
+                  <Autocomplete
+                    id="contact-autocomplete"
+                    options={contacts}
+                    size="small"
+                    getOptionLabel={(option) => option?.Full_Name}
+                    fullWidth
+                    value={selectedContact}
+                    onChange={(event, newValue) => {
+                      setSelectedContact(newValue);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Contact Reporting Issue"
+                        variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    )}
+                  />
+                </Grid>
+              )}
+
               <Grid item xs={6}>
                 <Controller
                   name="classification"
@@ -395,16 +390,15 @@ function App() {
                 />
               </Grid>
               <Grid item xs={12}>
-                <Box sx={{ minHeight: 200 }}>
-                  <ReactQuill
-                    theme="snow"
-                    modules={modules}
-                    formats={formats}
-                    value={watchAllFields?.description}
-                    onChange={(e) => setValue("description", e)}
-                    // onChange={(e) => console.log("description", e)}
-                  />
-                </Box>{" "}
+                <ReactQuill
+                  theme="snow"
+                  modules={modules}
+                  formats={formats}
+                  value={watchAllFields?.description}
+                  onChange={(e) => setValue("description", e)}
+                  // onChange={(e) => console.log("description", e)}
+                />
+
                 {/* <Controller
                   name="description"
                   control={control}
