@@ -168,56 +168,63 @@ function App() {
   };
 
   const onSubmit = async (data) => {
-    setCreateLoading(true);
-    let func_name = "Zoho_desk_ticket_handle_from_milestones";
-    let req_data = {
-      create_tickets: true,
-      department: selectedDepartment?.id,
-      selectedAgent: selectedAgent?.id ? selectedAgent?.id : null,
-      cf_milestone_id: entityId,
-      subject: data?.subject,
-      description: data?.description,
-      classification: data?.classification,
-      priority: data?.priority,
-      email: selectedContact
-        ? selectedContact?.Email.toLowerCase()
-        : vendor?.Contact_Email?.toLowerCase(),
-      phone: selectedContact
-        ? selectedContact?.Phone
-        : vendor?.Contact_Telephone,
-      // due_date: data?.due_date,
-      // contactId: "592678000019613037",
-    };
-    // console.log({ req_data });
-    await ZOHO.CRM.FUNCTIONS.execute(func_name, req_data).then(async function (
-      result
-    ) {
-      // console.log(result);
-      let resp = JSON.parse(
-        result?.details?.output ? result?.details?.output : "{}"
-      );
-      if (resp?.id) {
-        await ZOHO.CRM.API.addNotes({
-          Entity: "Milestones",
-          RecordID: entityId,
-          Content: `Ticket Number: ${resp?.ticketNumber} created`,
-        });
-        handleCloseWidget();
-        // setTimeout(() => {
-        //   handleCloseWidget();
-        // }, 5000);
-      } else {
-        if (resp?.error) {
-          setSnackbarMessage(resp?.error);
-          setOpenSnackbar(true);
-        } else {
-          setSnackbarMessage("Something went wrong please try again later...");
-          setOpenSnackbar(true);
+    try {
+      setCreateLoading(true);
+      let func_name = "Zoho_desk_ticket_handle_from_milestones";
+      let req_data = {
+        create_tickets: true,
+        department: selectedDepartment?.id,
+        selectedAgent: selectedAgent?.id ? selectedAgent?.id : null,
+        cf_milestone_id: entityId,
+        subject: data?.subject,
+        description: data?.description,
+        classification: data?.classification,
+        priority: data?.priority,
+        email: selectedContact
+          ? selectedContact?.Email.toLowerCase()
+          : vendor?.Contact_Email?.toLowerCase(),
+        phone: selectedContact
+          ? selectedContact?.Phone
+          : vendor?.Contact_Telephone,
+        // due_date: data?.due_date,
+        // contactId: "592678000019613037",
+      };
+
+      await ZOHO.CRM.FUNCTIONS.execute(func_name, req_data).then(
+        async function (result) {
+          // console.log(result);
+          let resp = JSON.parse(
+            result?.details?.output ? result?.details?.output : "{}"
+          );
+          if (resp?.id) {
+            await ZOHO.CRM.API.addNotes({
+              Entity: "Milestones",
+              RecordID: entityId,
+              Content: `Ticket Number: ${resp?.ticketNumber} created`,
+            });
+            handleCloseWidget();
+            // setTimeout(() => {
+            //   handleCloseWidget();
+            // }, 5000);
+          } else {
+            if (resp?.error) {
+              setSnackbarMessage(resp?.error);
+              setOpenSnackbar(true);
+            } else {
+              setSnackbarMessage(
+                "Something went wrong please try again later..."
+              );
+              setOpenSnackbar(true);
+            }
+            setCreateLoading(false);
+          }
         }
-        setCreateLoading(false);
-      }
-    });
-    // Log form data to the console
+      );
+    } catch (error) {
+      setSnackbarMessage(error?.message);
+      setOpenSnackbar(true);
+      setCreateLoading(false);
+    }
   };
 
   const [selectedAgent, setSelectedAgent] = useState(null);
