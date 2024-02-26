@@ -17,6 +17,12 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import Autocomplete from "@mui/material/Autocomplete";
 import dayjs from "dayjs";
+
+// Import React FilePond
+import { FilePond } from "react-filepond";
+
+// Import FilePond styles
+import "filepond/dist/filepond.min.css";
 // import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 // import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 // import { DatePicker } from "@mui/x-date-pickers";
@@ -44,6 +50,7 @@ const formats = [
   "color",
   "background",
   "align",
+  "image",
 ];
 
 const ZOHO = window.ZOHO;
@@ -72,6 +79,7 @@ function App() {
   const [selectedContact, setSelectedContact] = useState(null);
   const [agents, setAgents] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [selectedFile, setSelectedFile] = useState();
   const { isValid } = formState;
 
   const [zohoLoaded, setZohoLoaded] = useState(false);
@@ -167,7 +175,118 @@ function App() {
     });
   };
 
+  const uploadAttachment = async () => {
+    let attachmentIds = [];
+    try {
+      await Promise.all(
+        selectedFile?.map(async (element) => {
+          const upload_resp = await ZOHO.CRM.API.attachFile({
+            Entity: "Milestones",
+            RecordID: entityId,
+            File: { Name: element?.file?.name, Content: element?.file },
+          });
+          console.log(upload_resp);
+          if (upload_resp?.data?.[0]?.details?.id) {
+            attachmentIds.push(upload_resp?.data?.[0]?.details?.id);
+          }
+        })
+      );
+    } catch (error) {
+      setSnackbarMessage("File Upload Error. Please try again later!!!");
+      setOpenSnackbar(true);
+      setCreateLoading(false);
+    }
+    console.log({ attachmentIds });
+    return attachmentIds;
+  };
+
   const onSubmit = async (data) => {
+    try {
+      let email = selectedContact
+        ? selectedContact?.Email.toLowerCase()
+        : vendor?.Contact_Email?.toLowerCase();
+      let conn_name = "zoho_desk_conn";
+      let req_data = {
+        method: "GET",
+        url: `https://desk.zoho.com/api/v1/contacts/search?limit=1&email=${encodeURIComponent(
+          email
+        )}`,
+        param_type: 1,
+      };
+      ZOHO.CRM.CONNECTION.invoke(conn_name, req_data).then(async function (
+        contact_search_data
+      ) {
+        let desk_contact_id =
+          contact_search_data?.details?.statusMessage?.data?.[0]?.id;
+        if (desk_contact_id) {
+          let create_req_data = {
+            parameters: {
+              cf: { cf_milestone_id: entityId },
+              departmentId: selectedDepartment?.id,
+              assigneeId: selectedAgent?.id ? selectedAgent?.id : null,
+              contactId: desk_contact_id,
+              subject: data?.subject,
+              description: data?.description,
+              priority: data?.priority,
+              classification: data?.classification,
+              phone: selectedContact
+                ? selectedContact?.Phone
+                : vendor?.Contact_Telephone,
+              email: email,
+              status: "Open",
+              channel: "Web",
+            },
+            headers: {
+              "Content-Type": "application/json",
+            },
+            method: "POST",
+            url: "https://desk.zoho.com/api/v1/tickets",
+            param_type: 2,
+          };
+          ZOHO.CRM.CONNECTION.invoke(conn_name, create_req_data).then(
+            async function (create_resp) {
+              let newly_created_ticket_id =
+                create_resp?.details?.statusMessage?.id;
+              if (newly_created_ticket_id) {
+                await ZOHO.CRM.API.addNotes({
+                  Entity: "Milestones",
+                  RecordID: entityId,
+                  Content: `Ticket Number: ${create_resp?.details?.statusMessage?.ticketNumber} created`,
+                });
+                if (newly_created_ticket_id) {
+                  if (selectedFile?.length > 0) {
+                    let attachment_Ids = await uploadAttachment();
+                    console.log(attachment_Ids);
+                  } else {
+                    handleCloseWidget();
+                  }
+                } else {
+                  console.log(newly_created_ticket_id);
+                }
+              } else {
+                setSnackbarMessage(
+                  "Something went wrong. Please try again later!!!"
+                );
+                setOpenSnackbar(true);
+                setCreateLoading(false);
+              }
+            }
+          );
+        } else {
+          setSnackbarMessage(
+            "No contact was found for this vendor on Zoho Desk"
+          );
+          setOpenSnackbar(true);
+          setCreateLoading(false);
+        }
+      });
+    } catch (error) {
+      setSnackbarMessage(error?.message);
+      setOpenSnackbar(true);
+      setCreateLoading(false);
+    }
+
+    return;
     try {
       setCreateLoading(true);
       let func_name = "Zoho_desk_ticket_handle_from_milestones";
@@ -423,6 +542,14 @@ function App() {
                     />
                   )}
                 /> */}
+              </Grid>
+              <Grid item xs={12}>
+                <FilePond
+                  files={selectedFile}
+                  onupdatefiles={setSelectedFile}
+                  allowMultiple={true}
+                  labelIdle='Drag & Drop your files or <span class="filepond--label-action">Browse</span>'
+                />
               </Grid>
               {/* <Grid item xs={6}>
             <Controller
