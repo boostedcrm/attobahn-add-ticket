@@ -185,7 +185,7 @@ function App() {
             RecordID: entityId,
             File: { Name: element?.file?.name, Content: element?.file },
           });
-          console.log(upload_resp);
+          // console.log(upload_resp);
           if (upload_resp?.data?.[0]?.details?.id) {
             attachmentIds.push(upload_resp?.data?.[0]?.details?.id);
           }
