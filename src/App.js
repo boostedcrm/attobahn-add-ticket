@@ -196,12 +196,12 @@ function App() {
       setOpenSnackbar(true);
       setCreateLoading(false);
     }
-    console.log({ attachmentIds });
     return attachmentIds;
   };
 
   const onSubmit = async (data) => {
     try {
+      setCreateLoading(true);
       let email = selectedContact
         ? selectedContact?.Email.toLowerCase()
         : vendor?.Contact_Email?.toLowerCase();
@@ -253,15 +253,28 @@ function App() {
                   RecordID: entityId,
                   Content: `Ticket Number: ${create_resp?.details?.statusMessage?.ticketNumber} created`,
                 });
-                if (newly_created_ticket_id) {
-                  if (selectedFile?.length > 0) {
-                    let attachment_Ids = await uploadAttachment();
-                    console.log(attachment_Ids);
-                  } else {
-                    handleCloseWidget();
-                  }
+                if (selectedFile?.length > 0) {
+                  let attachment_Ids = await uploadAttachment();
+                  let upload_func_name =
+                    "bcrm_upload_file_into_related_desk_ticket";
+                  let req_data_attachment = {
+                    record_id: entityId,
+                    ticket_id: newly_created_ticket_id,
+                    attachment_ids: JSON.stringify(attachment_Ids),
+                  };
+                  await ZOHO.CRM.FUNCTIONS.execute(
+                    upload_func_name,
+                    req_data_attachment
+                  ).then(async function (result) {
+                    let resp = JSON.parse(
+                      result?.details?.output ? result?.details?.output : "{}"
+                    );
+                    if (resp?.status === "success") {
+                      handleCloseWidget();
+                    }
+                  });
                 } else {
-                  console.log(newly_created_ticket_id);
+                  handleCloseWidget();
                 }
               } else {
                 setSnackbarMessage(
@@ -280,65 +293,6 @@ function App() {
           setCreateLoading(false);
         }
       });
-    } catch (error) {
-      setSnackbarMessage(error?.message);
-      setOpenSnackbar(true);
-      setCreateLoading(false);
-    }
-
-    return;
-    try {
-      setCreateLoading(true);
-      let func_name = "Zoho_desk_ticket_handle_from_milestones";
-      let req_data = {
-        create_tickets: true,
-        department: selectedDepartment?.id,
-        selectedAgent: selectedAgent?.id ? selectedAgent?.id : null,
-        cf_milestone_id: entityId,
-        subject: data?.subject,
-        description: data?.description,
-        classification: data?.classification,
-        priority: data?.priority,
-        email: selectedContact
-          ? selectedContact?.Email.toLowerCase()
-          : vendor?.Contact_Email?.toLowerCase(),
-        phone: selectedContact
-          ? selectedContact?.Phone
-          : vendor?.Contact_Telephone,
-        // due_date: data?.due_date,
-        // contactId: "592678000019613037",
-      };
-
-      await ZOHO.CRM.FUNCTIONS.execute(func_name, req_data).then(
-        async function (result) {
-          // console.log(result);
-          let resp = JSON.parse(
-            result?.details?.output ? result?.details?.output : "{}"
-          );
-          if (resp?.id) {
-            await ZOHO.CRM.API.addNotes({
-              Entity: "Milestones",
-              RecordID: entityId,
-              Content: `Ticket Number: ${resp?.ticketNumber} created`,
-            });
-            handleCloseWidget();
-            // setTimeout(() => {
-            //   handleCloseWidget();
-            // }, 5000);
-          } else {
-            if (resp?.error) {
-              setSnackbarMessage(resp?.error);
-              setOpenSnackbar(true);
-            } else {
-              setSnackbarMessage(
-                "Something went wrong please try again later..."
-              );
-              setOpenSnackbar(true);
-            }
-            setCreateLoading(false);
-          }
-        }
-      );
     } catch (error) {
       setSnackbarMessage(error?.message);
       setOpenSnackbar(true);
