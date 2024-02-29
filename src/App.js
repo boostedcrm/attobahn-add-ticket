@@ -233,7 +233,10 @@ function App() {
               assigneeId: selectedAgent?.id ? selectedAgent?.id : null,
               contactId: desk_contact_id,
               subject: data?.subject,
-              description: data?.description,
+              description: data?.description?.replaceAll(
+                "<p><br></p>",
+                "<p></p>"
+              ),
               priority: data?.priority,
               classification: data?.classification,
               phone: selectedContact?.Phone ? selectedContact?.Phone : null,
