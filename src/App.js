@@ -75,7 +75,7 @@ function App() {
   const [departments, setDepartments] = useState([]);
   const [entityId, setEntityId] = useState();
   const [vendor, setVendor] = useState();
-  const [contacts, setContacts] = useState([]);
+  // const [contacts, setContacts] = useState([]);
   const [selectedContact, setSelectedContact] = useState(null);
   const [agents, setAgents] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -119,16 +119,25 @@ function App() {
                 setVendor(vendor_resp);
               });
 
-              await ZOHO.CRM.API.getRelatedRecords({
-                Entity: "Vendors",
-                RecordID: pa_resp?.Vendor?.id,
-                RelatedList: "Contacts",
-                page: 1,
-                per_page: 200,
-              }).then(function (contact_list) {
-                // console.log({ contact_list: contact_list?.data });
-                setContacts(contact_list?.data || []);
+              await ZOHO.CRM.API.getRecord({
+                Entity: "Contacts",
+                RecordID: pa_resp?.Vendor_Contact_s?.id,
+              }).then(async function (contactOutput) {
+                let contact_resp = contactOutput?.data?.[0];
+                console.log({ contact_resp });
+                setSelectedContact(contact_resp);
               });
+
+              // await ZOHO.CRM.API.getRelatedRecords({
+              //   Entity: "Vendors",
+              //   RecordID: pa_resp?.Vendor?.id,
+              //   RelatedList: "Contacts",
+              //   page: 1,
+              //   per_page: 200,
+              // }).then(function (contact_list) {
+              //   // console.log({ contact_list: contact_list?.data });
+              //   setContacts(contact_list?.data || []);
+              // });
             }
           });
         }
@@ -202,9 +211,7 @@ function App() {
   const onSubmit = async (data) => {
     try {
       setCreateLoading(true);
-      let email = selectedContact
-        ? selectedContact?.Email.toLowerCase()
-        : vendor?.Contact_Email?.toLowerCase();
+      let email = selectedContact ? selectedContact?.Email.toLowerCase() : null;
       let conn_name = "zoho_desk_conn";
       let req_data = {
         method: "GET",
@@ -229,9 +236,7 @@ function App() {
               description: data?.description,
               priority: data?.priority,
               classification: data?.classification,
-              phone: selectedContact
-                ? selectedContact?.Phone
-                : vendor?.Contact_Telephone,
+              phone: selectedContact?.Phone ? selectedContact?.Phone : null,
               email: email,
               status: "Open",
               channel: "Web",
@@ -314,9 +319,10 @@ function App() {
         if (findAgent) {
           setSelectedAgent(findAgent);
         }
-      } else {
-        setSelectedContact(null);
       }
+      // else {
+      //   setSelectedContact(null);
+      // }
     }
   }, [selectedDepartment]);
   return (
@@ -380,7 +386,7 @@ function App() {
                   )}
                 />
               </Grid>
-              {selectedDepartment?.id === "592678000020442029" && (
+              {/* {selectedDepartment?.id === "592678000020442029" && (
                 <Grid item xs={6}>
                   <Autocomplete
                     id="contact-autocomplete"
@@ -402,7 +408,7 @@ function App() {
                     )}
                   />
                 </Grid>
-              )}
+              )} */}
 
               <Grid item xs={6}>
                 <Controller
